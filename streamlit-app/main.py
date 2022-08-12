@@ -73,4 +73,4 @@ with tab2:
 with tab3:
     user_id = st.selectbox('Enter user id', list(ratings_df['userId'].unique()))
     movie_name = st.selectbox('Enter a movie liked by the user', list(movie_meta_df['original_title'].head(50)))
-    st.write(f'Movies similar to {movie_name} movies for user', get_similar_movies_for_user(user_id, movie_name))
+    st.write(f'Movies similar to "{movie_name}" for user', get_similar_movies_for_user(user_id, movie_name))
