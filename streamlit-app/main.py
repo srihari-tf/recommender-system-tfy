@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 import implicit
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def load_models_and_dfs():
   client = mlfoundry.get_client(api_key='djE6dHJ1ZWZvdW5kcnk6dXNlci10cnVlZm91bmRyeTo0ZDlkM2M=')
   run = client.get_run('truefoundry/user-truefoundry/movie-clustering-aug-12/cf-model')
