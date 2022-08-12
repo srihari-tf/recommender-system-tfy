@@ -4,27 +4,34 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 import implicit
 
-client = mlfoundry.get_client(api_key='djE6dHJ1ZWZvdW5kcnk6dXNlci10cnVlZm91bmRyeTo0ZDlkM2M=')
-run = client.get_run('truefoundry/user-truefoundry/movie-clustering-aug-12/cf-model')
+@st.cache
+def load_models_and_dfs():
+  client = mlfoundry.get_client(api_key='djE6dHJ1ZWZvdW5kcnk6dXNlci10cnVlZm91bmRyeTo0ZDlkM2M=')
+  run = client.get_run('truefoundry/user-truefoundry/movie-clustering-aug-12/cf-model')
 
-movies_local_path = run.download_artifact('movies_metadata.csv')
-ratings_local_path = run.download_artifact('ratings_small.csv')
+  movies_local_path = run.download_artifact('movies_metadata.csv')
+  ratings_local_path = run.download_artifact('ratings_small.csv')
 
-movie_meta_df = pd.read_csv(movies_local_path)
-ratings_df = pd.read_csv(ratings_local_path)
+  movie_meta_df = pd.read_csv(movies_local_path)
+  ratings_df = pd.read_csv(ratings_local_path)
 
-# only keep movies in ratings dataset
-movie_meta_df = movie_meta_df[movie_meta_df['id'].isin(ratings_df['movieId'].astype('string'))]
+  # only keep movies in ratings dataset
+  movie_meta_df = movie_meta_df[movie_meta_df['id'].isin(ratings_df['movieId'].astype('string'))]
 
-ratings_df['movieId'] = ratings_df['movieId'].astype("category")
-ratings_df['userId'] = ratings_df['userId'].astype("category")
-r = coo_matrix((ratings_df['rating'], (ratings_df['userId'].cat.codes, ratings_df['movieId'].cat.codes)))
+  ratings_df['movieId'] = ratings_df['movieId'].astype("category")
+  ratings_df['userId'] = ratings_df['userId'].astype("category")
+  r = coo_matrix((ratings_df['rating'], (ratings_df['userId'].cat.codes, ratings_df['movieId'].cat.codes)))
 
-user_category_to_code = dict([(category, code) for code, category in enumerate(ratings_df.userId.cat.categories)])
-movie_category_to_code = dict([(category, code) for code, category in enumerate(ratings_df.movieId.cat.categories)])
+  user_category_to_code = dict([(category, code) for code, category in enumerate(ratings_df.userId.cat.categories)])
+  movie_category_to_code = dict([(category, code) for code, category in enumerate(ratings_df.movieId.cat.categories)])
 
-model_local_path = run.download_artifact('recommendation-model.npz')
-model = implicit.als.AlternatingLeastSquares(factors=25).load(model_local_path)
+  model_local_path = run.download_artifact('recommendation-model.npz')
+  model = implicit.als.AlternatingLeastSquares(factors=25).load(model_local_path)
+
+  return model, user_category_to_code, movie_category_to_code, movie_meta_df, ratings_df, r
+
+
+model, user_category_to_code, movie_category_to_code, movie_meta_df, ratings_df, r = load_models_and_dfs()
 
 def search_movie(name):
   return (movie_meta_df.loc[movie_meta_df['original_title'].str.contains(name, case=False)][['original_title', 'id']]).to_dict('records')
