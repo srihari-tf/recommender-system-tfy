@@ -50,7 +50,7 @@ def get_recommendation_for_user(user_id):
 tab1, tab2 = st.tabs(["Similar Movies", "Recommend for User"])
 
 with tab1:
-    movie_name = st.selectbox('Movie title', list(movie_meta_df['original_title'].head(50)))
+    movie_name = st.selectbox('Movie Title', list(movie_meta_df['original_title'].head(50)))
     st.write('Similar movies:', find_similar_movie(movie_name)[1])
 
 with tab2:
