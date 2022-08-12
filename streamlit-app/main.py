@@ -47,12 +47,30 @@ def get_recommendation_for_user(user_id):
   ids = [ratings_df['movieId'].cat.categories[i] for i in movie_cat_codes]
   return list(movie_meta_df.loc[movie_meta_df['id'].isin([str(id) for id in ids])].original_title)
 
-tab1, tab2 = st.tabs(["Similar Movies", "Recommend for User"])
+def get_similar_movies_for_user(user_id, movie_name):
+  search_result =search_movie(movie_name)
+  if len(search_result) > 0:
+    movie_id = search_result[0]['id']
+    movie_name = search_result[0]['original_title']
+  else:
+    return []
+  movie_cat_code = movie_category_to_code[int(movie_id)]
+  user_cat_code = user_category_to_code[int(user_id)]
+  movie_cat_codes = model.rank_items(user_cat_code, r.tocsr().getrow(user_cat_code), model.similar_items(movie_cat_code)[0])[0]
+  ids = [ratings_df['movieId'].cat.categories[i] for i in movie_cat_codes]
+  return list(movie_meta_df.loc[movie_meta_df['id'].isin([str(id) for id in ids])].original_title)
+
+tab1, tab2, tab3 = st.tabs(["Similar Movies", "Recommend for User", "Get similar movies for User"])
 
 with tab1:
-    movie_name = st.selectbox('Movie Title', list(movie_meta_df['original_title'].head(50)))
+    movie_name = st.selectbox('Movie title', list(movie_meta_df['original_title'].head(50)))
     st.write('Similar movies:', find_similar_movie(movie_name)[1])
 
 with tab2:
     user_id = st.selectbox('Enter User Id', list(ratings_df['userId'].unique()))
     st.write('Recommendations for user', get_recommendation_for_user(user_id))
+
+with tab3:
+    user_id = st.selectbox('Enter User Id', list(ratings_df['userId'].unique()))
+    movie_name = st.selectbox('Movie title', list(movie_meta_df['original_title'].head(50)))
+    st.write(f'Movies similar to {movie_name} movies for user', get_similar_movies_for_user(user_id, movie_name))
