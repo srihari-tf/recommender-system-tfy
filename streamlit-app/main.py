@@ -7,7 +7,7 @@ import os
 
 @st.cache(allow_output_mutation=True)
 def load_models_and_dfs():
-  client = mlfoundry.get_client(api_key=os.getenv('TFY_API_KEY'))
+  client = mlfoundry.login()
   run = client.get_run(os.getenv('MLF_RUN_FQN'))
 
   movies_local_path = run.download_artifact('movies_metadata.csv')
